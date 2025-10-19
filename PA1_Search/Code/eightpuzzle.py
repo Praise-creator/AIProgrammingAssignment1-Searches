@@ -14,6 +14,9 @@
 
 import search
 import random
+import argparse
+import time
+import json
 
 # Module Classes
 
@@ -191,15 +194,22 @@ class EightPuzzleSearchProblem(search.SearchProblem):
 
       Each state is represented by an instance of an eightPuzzle.
     """
-    def __init__(self,puzzle):
+    def __init__(self,puzzle, goal = None):
         "Creates a new EightPuzzleSearchProblem which stores search information."
         self.puzzle = puzzle
+        
+        #custom goal state
+        if goal is None:
+            self.goal = EightPuzzleState([0, 1, 2, 3, 4, 5, 6, 7, 8])
+        else:
+            self.goal = goal
+
 
     def getStartState(self):
-        return puzzle
+        return self.puzzle
 
     def isGoalState(self,state):
-        return state.isGoal()
+        return state == self.goal
 
     def getSuccessors(self,state):
         """
@@ -262,20 +272,194 @@ def createRandomEightPuzzle(moves=100):
         puzzle = puzzle.result(random.sample(puzzle.legalMoves(), 1)[0])
     return puzzle
 
+def parse_grid(grid_string):
+    # First replace '-' with '0' to make it valid JSON
+    grid_string = grid_string.replace('-', '0')
+    
+    grid_string = grid_string.replace(' ', '')
+    
+    grid = json.loads(grid_string)
+    
+    numbers = []
+    for row in grid:
+        for cell in row:
+            numbers.append(int(cell))
+    
+    return numbers
+
+
+
+# Had claude generate this
+def run_search(problem, search_func, search_name, initial_state, heuristic=None):
+    """
+    Generic function to run any search algorithm and track metrics.
+    
+    Args:
+        problem: EightPuzzleSearchProblem instance
+        search_func: The search function to call (e.g., search.depthFirstSearch)
+        search_name: Name of the algorithm (e.g., 'DFS', 'BFS')
+        initial_state: The initial puzzle state
+        heuristic: Heuristic function (for informed search)
+    """
+    print(f"Running {search_name}...")
+    
+    start_time = time.time()
+    
+    # Call the search function (with or without heuristic)
+    if heuristic:
+        result = search_func(problem, heuristic)
+    else:
+        result = search_func(problem)
+    
+    end_time = time.time()
+    
+    # Unpack result (all search functions should return same format)
+    path, nodes_expanded, max_depth = result
+    
+    return {
+        'search_name': search_name,
+        'path': path,
+        'path_cost': len(path),
+        'nodes_expanded': nodes_expanded,
+        'max_depth': max_depth,
+        'time': end_time - start_time,
+        'initial_state': initial_state
+    }
+
+def write_output(metrics, problem, heuristic_name=None):
+    """
+    Generic function to write output for any search algorithm.
+    Handles the naming convention based on search type and heuristic.
+    """
+    search_name = metrics['search_name']
+    
+    # Build filename according to assignment requirements
+    if heuristic_name and search_name in ['GBS', 'A*']:
+        filename = f"output_{search_name}_{heuristic_name}.txt"
+    else:
+        filename = f"output_{search_name}.txt"
+    
+    with open(filename, 'w') as f:
+        # Write header
+        f.write(f"{search_name}")
+        if heuristic_name:
+            f.write(f" (Heuristic: {heuristic_name})")
+        f.write("\n")
+        f.write("*" * 50 + "\n\n")
+        
+        # Write path
+        f.write("Path:\n")
+        f.write("=" * 50 + "\n\n")
+        
+        current_state = metrics['initial_state']
+        f.write("Initial State (s0):\n")
+        f.write(str(current_state) + "\n\n")
+        
+        if len(metrics['path']) == 0:
+            f.write("No solution found!\n\n")
+        else:
+            for i, action in enumerate(metrics['path'], 1):
+                current_state = current_state.result(action)
+                f.write(f"Step {i}: Action = '{action}' -> State (s{i}):\n")
+                f.write(str(current_state) + "\n\n")
+            
+            f.write(f"Goal State (s{len(metrics['path'])}) reached!\n\n")
+        
+        f.write("=" * 50 + "\n")
+        f.write("Path Sequence:\n")
+        if len(metrics['path']) > 0:
+            path_str = " -> ".join(metrics['path'])
+            f.write(f"{path_str}\n\n")
+        else:
+            f.write("No path found\n\n")
+        
+        f.write("=" * 50 + "\n")
+        f.write("METRICS:\n")
+        f.write("=" * 50 + "\n")
+        f.write(f"Path Cost: {metrics['path_cost']}\n")
+        f.write(f"Nodes Expanded: {metrics['nodes_expanded']}\n")
+        f.write(f"Search Depth: {metrics['max_depth']}\n")
+        f.write(f"Time Taken: {metrics['time']:.6f} seconds\n")
+        f.write("=" * 50 + "\n")
+    
+    print(f"\nResults written to {filename}")
+    print(f"Path Cost: {metrics['path_cost']}")
+    print(f"Nodes Expanded: {metrics['nodes_expanded']}")
+    print(f"Search Depth: {metrics['max_depth']}")
+    print(f"Time Taken: {metrics['time']:.6f} seconds")
+    
+    
+
 if __name__ == '__main__':
-    puzzle = createRandomEightPuzzle(25)
-    print('A random puzzle:')
+    parser = argparse.ArgumentParser(description='Solve 8-Puzzle using various search algorithms')
+    parser.add_argument('--search', type=str, required=True,
+                       choices=['BFS', 'DFS', 'IDS', 'UCS', 'GBS', 'A*', 'Beam'],
+                       help='Search algorithm to use')
+    parser.add_argument('--initial', type=str, required=True,
+                       help='Initial state as a 2D grid, e.g., "[[-,2,3],[1,4,5],[8,7,6]]"')
+    parser.add_argument('--goal', type=str, required=True,
+                       help='Goal state as a 2D grid, e.g., "[[1,2,3],[8,-,4],[7,6,5]]"')
+    parser.add_argument('--heuristic', type=str, default='misplaced',
+                       choices=['misplaced', 'manhattan', 'other'],
+                       help='Heuristic function for informed search')
+    
+    args = parser.parse_args()
+    
+    # Parse initial and goal states
+    print("Parsing input...")
+    initial_numbers = parse_grid(args.initial)
+    goal_numbers = parse_grid(args.goal)
+    
+    # Create puzzle states
+    puzzle = EightPuzzleState(initial_numbers)
+    goal = EightPuzzleState(goal_numbers)
+    
+    print("\nInitial puzzle:")
     print(puzzle)
-
-    problem = EightPuzzleSearchProblem(puzzle)
-    path = search.breadthFirstSearch(problem)
-    print('BFS found a path of %d moves: %s' % (len(path), str(path)))
-    curr = puzzle
-    i = 1
-    for a in path:
-        curr = curr.result(a)
-        print('After %d move%s: %s' % (i, ("", "s")[i>1], a))
-        print(curr)
-
-        input("Press return for the next state...")   # wait for key stroke
-        i += 1
+    print("\nGoal puzzle:")
+    print(goal)
+    
+    # Create search problem with custom goal
+    problem = EightPuzzleSearchProblem(puzzle, goal)
+    
+    # Run selected search algorithm
+    metrics = None
+    heuristic_func = None
+    
+    if args.search == 'DFS':
+        metrics = run_search(problem, search.depthFirstSearch, 'DFS', puzzle)
+        write_output(metrics, problem)
+        
+    elif args.search == 'BFS':
+        metrics = run_search(problem, search.breadthFirstSearch, 'BFS', puzzle)
+        write_output(metrics, problem)
+        
+    elif args.search == 'IDS':
+        metrics = run_search(problem, search.iterativeDeepeningSearch, 'IDS', puzzle)
+        write_output(metrics, problem)
+        
+    elif args.search == 'UCS':
+        metrics = run_search(problem, search.uniformCostSearch, 'UCS', puzzle)
+        write_output(metrics, problem)
+        
+    elif args.search == 'GBS':
+        # Get heuristic function
+        if args.heuristic == 'misplaced':
+            heuristic_func = search.misplacedTilesHeuristic
+        elif args.heuristic == 'manhattan':
+            heuristic_func = search.manhattanDistanceHeuristic
+        
+        metrics = run_search(problem, search.greedyBestFirstSearch, 'GBS', puzzle, heuristic_func)
+        write_output(metrics, problem, args.heuristic)
+        
+    elif args.search == 'A*':
+        # Get heuristic function
+        if args.heuristic == 'misplaced':
+            heuristic_func = search.misplacedTilesHeuristic
+        elif args.heuristic == 'manhattan':
+            heuristic_func = search.manhattanDistanceHeuristic
+        
+        metrics = run_search(problem, search.aStarSearch, 'A*', puzzle, heuristic_func)
+        write_output(metrics, problem, args.heuristic)
+    
+    print("\nSearch completed!")
