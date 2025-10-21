@@ -124,7 +124,102 @@ def depthFirstSearch(problem: SearchProblem):
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Queue
+    
+    frontier = Queue()
+    start_state = problem.getStartState()
+    frontier.push((start_state, [], 0))  # (state, path, depth)
+    explored = set()
+    
+    nodes_expanded = 0
+    max_depth = 0
+    
+    while not frontier.isEmpty():
+        currentState, actions, depth = frontier.pop()
+        
+        if currentState in explored:
+            continue
+        
+        explored.add(currentState)
+        nodes_expanded += 1
+        max_depth = max(max_depth, depth)
+        
+        if problem.isGoalState(currentState):
+            return actions, nodes_expanded, max_depth  # Found 
+        
+        successors = problem.getSuccessors(currentState)
+        
+        for nextState, action, cost in successors:
+            if nextState not in explored:
+                newActions = actions + [action]
+                frontier.push((nextState, newActions, depth + 1))
+    
+    
+
+#explained by https://github.com/mgabilo/eightpuzzle-iterative-deepening
+
+def iterativeDeepeningSearch(problem: SearchProblem):
+    
+    from util import Stack
+    
+    total_nodes_expanded = 0
+    depth_limit = 0
+    
+    while True:
+        # Do depth-limited DFS
+        result, nodes_expanded = depthLimitedDFS(problem, depth_limit)
+        total_nodes_expanded += nodes_expanded
+        
+        if result != 'cutoff':
+            return result, total_nodes_expanded, depth_limit
+        
+        # Otherwise, increase depth limit and try again
+        depth_limit += 1
+    
+
+
+def depthLimitedDFS(problem: SearchProblem, limit):
+    #utility for IDS
+    from util import Stack   
+     
+    frontier = Stack()
+    start_state = problem.getStartState()
+    frontier.push((start_state, [], 0))  # (state, actions, depth)
+    explored = set()
+    
+    nodes_expanded = 0
+    cutoff_occurred = False
+    
+    while not frontier.isEmpty():
+        currentState, actions, depth = frontier.pop()
+        
+        # Skip if already visited at this or shallower depth
+        if currentState in explored:
+            continue
+        
+        explored.add(currentState)
+        nodes_expanded += 1
+        
+        # Goal test
+        if problem.isGoalState(currentState):
+            return actions, nodes_expanded
+        
+        if depth < limit:
+            successors = problem.getSuccessors(currentState)
+            
+            for nextState, action, cost in successors:
+                if nextState not in explored:
+                    newActions = actions + [action]
+                    frontier.push((nextState, newActions, depth + 1))
+        else:
+            # Hit the depth limit - this path is cut off
+            cutoff_occurred = True
+    
+    # If we cut off any paths, signal that we should try deeper
+    if cutoff_occurred:
+        return 'cutoff', nodes_expanded
+    else:
+        return [], nodes_expanded  # No solution 
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
