@@ -72,6 +72,9 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+
+
+"""First 4 search algorithms have similar structure but use different data structures for frontier"""
 def depthFirstSearch(problem: SearchProblem):
     """
     Search the deepest nodes in the search tree first.
@@ -221,10 +224,44 @@ def depthLimitedDFS(problem: SearchProblem, limit):
     else:
         return [], nodes_expanded  # No solution 
 
+
+#uses function getcostofactions from eightpuzzle
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+    
+    frontier = PriorityQueue()
+    start_state = problem.getStartState()
+    frontier.push((start_state, [], 0), 0)  # ((state, actions, depth), priority=cost)
+    explored = set()
+    
+    nodes_expanded = 0
+    max_depth = 0
+    
+    while not frontier.isEmpty():
+        currentState, actions, depth = frontier.pop()
+        
+        if currentState in explored:
+            continue
+        
+        explored.add(currentState)
+        nodes_expanded += 1
+        max_depth = max(max_depth, depth)
+        
+        if problem.isGoalState(currentState):
+            return actions, nodes_expanded, max_depth
+        
+        # Expand successors
+        successors = problem.getSuccessors(currentState)
+        
+        for nextState, action, stepCost in successors:
+            if nextState not in explored:
+                newActions = actions + [action]
+                newCost = problem.getCostOfActions(newActions)
+                frontier.push((nextState, newActions, depth + 1), newCost)
+    
+    return [], nodes_expanded, max_depth
 
 def nullHeuristic(state, problem=None):
     """
