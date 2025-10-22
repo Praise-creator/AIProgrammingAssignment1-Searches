@@ -270,6 +270,33 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+#Heuristic Functions:
+def misplacedTilesHeuristic(state, problem):
+    """Heuristic based on number of misplaced tiles."""
+    goal = problem.goal
+    misplaced = 0
+    for row in range(3):
+        for col in range(3):
+            if state.cells[row][col] != 0 and state.cells[row][col] != goal.cells[row][col]:
+                misplaced += 1
+    return misplaced
+
+def manhattanDistanceHeuristic(state, problem):
+    """Heuristic based on sum of Manhattan distances of tiles from their goal positions."""
+    distance = 0
+    goal_state = problem.goal
+    for row in range(3):
+        for col in range(3):
+            title = state.cells[row][col]
+            if title != 0:
+                for goal_row in range(3):
+                    for goal_col in range(3):
+                        if goal_state.cells[goal_row][goal_col] == title:
+                            distance += abs(row - goal_row) + abs(col - goal_col)
+    return distance
+
+
+
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
@@ -308,7 +335,6 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
             
     return [], nodes_expanded, max_depth
 
-    util.raiseNotDefined()
 
 
 # Abbreviations
