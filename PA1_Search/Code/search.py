@@ -335,7 +335,7 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
             
     return [], nodes_expanded, max_depth
 
-def bestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
+def greedyBestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest heuristic value first."""
     "*** YOUR CODE HERE ***"
     from util import PriorityQueue
