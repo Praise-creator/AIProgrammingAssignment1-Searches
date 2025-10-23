@@ -1,42 +1,62 @@
-# Eight Puzzle (PA1 Search) — Code and Usage
+# Eight Puzzle Search Algorithms
 
-This folder contains `eightpuzzle.py`, which provides a command-line interface to run several search algorithms on the 8-puzzle domain. Use the instructions below to run Greedy Best-First Search (GBS) with both heuristics and produce the output files required by the assignment.
+Implementation of search algorithms (DFS, BFS, IDS, UCS, GBS, A*) for the Eight Puzzle problem.
 
-## Prerequisites
-- Python 3.8+ installed and available as `python` in PowerShell.
-- No extra Python packages are required (uses stdlib).
+## Quick Start
 
-## Files
-- `eightpuzzle.py` — main script (accepts `--search`, `--initial`, `--goal`, `--heuristic`).
-- `run_both.ps1` — small PowerShell helper that runs GBS twice (misplaced and manhattan) and lists results.
+**Location:** All code is in `PA1_Search/Code/`
 
-## Typical usage
+**Run from:** `PA1_Search/Code` directory
 
-Open a PowerShell prompt in this folder (the `PA1_Search/Code` directory) then run a single GBS run like:
-
-```powershell
-python .\eightpuzzle.py --search GBS --initial "[[-,2,3],[1,4,5],[8,7,6]]" --goal "[[1,2,3],[8,-,4],[7,6,5]]" --heuristic misplaced
+```bash
+cd PA1_Search/Code
 ```
 
-This will create an output file named `output_GBS_misplaced.txt` in the same folder.
+## Running Algorithms
 
-To run the same problem with the Manhattan heuristic:
+### Uninformed Search (no heuristic needed)
+```bash
+# Breadth-First Search
+python3 eightpuzzle.py --search BFS --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]'
 
-```powershell
-python .\eightpuzzle.py --search GBS --initial "[[-,2,3],[1,4,5],[8,7,6]]" --goal "[[1,2,3],[8,-,4],[7,6,5]]" --heuristic manhattan
+# Depth-First Search
+python3 eightpuzzle.py --search DFS --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]'
+
+# Iterative Deepening Search
+python3 eightpuzzle.py --search IDS --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]'
+
+# Uniform Cost Search
+python3 eightpuzzle.py --search UCS --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]'
 ```
 
-## Run both heuristics automatically (PowerShell)
-If you prefer to run both heuristics automatically, use the helper script:
+### Informed Search (requires `--heuristic`)
+```bash
+# A* with Manhattan Distance
+python3 eightpuzzle.py --search Astar --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]' --heuristic manhattan
 
-```powershell
-./run_both.ps1
+# A* with Misplaced Tiles
+python3 eightpuzzle.py --search Astar --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]' --heuristic misplaced
+
+# Greedy Best-First Search with Manhattan
+python3 eightpuzzle.py --search GBS --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]' --heuristic manhattan
+
+# Greedy Best-First Search with Misplaced Tiles
+python3 eightpuzzle.py --search GBS --initial '[[1,-,2],[3,4,5],[6,7,8]]' --goal '[[1,2,3],[4,5,6],[7,8,-]]' --heuristic misplaced
 ```
 
-The helper runs GBS twice (misplaced then manhattan) with the example initial/goal above and prints the resulting filenames. You can edit `run_both.ps1` to change the `--initial` and `--goal` values.
 
-## Notes
-- The script writes output files in the current working directory with names like `output_GBS_misplaced.txt` and `output_GBS_manhattan.txt`.
-- If you encounter filename or path errors on Windows, ensure the filenames do not contain characters forbidden by Windows (e.g., `* ? < > |`).
+## Output Files
 
-If you'd like, I can also add a small README at the repo root linking to this file or modify `eightpuzzle.py` to add a `--both` flag that automatically runs both heuristics. Let me know which you prefer.
+**Each algorithm run creates a `.txt` file** in `PA1_Search/Code/` showing the complete solution:
+
+**Each file contains:**
+- Initial and goal states
+- Complete solution path (step-by-step moves)
+- Performance metrics (moves, nodes expanded, depth, runtime)
+
+## Code Files
+
+- `PA1_Search/Code/eightpuzzle.py` — Problem definition and CLI
+- `PA1_Search/Code/search.py` — All search algorithms and heuristics
+- `PA1_Search/Code/util.py` — Data structures (Stack, Queue, PriorityQueue)
+
