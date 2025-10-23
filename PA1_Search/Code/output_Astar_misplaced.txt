@@ -79,5 +79,5 @@ METRICS:
 Path Cost: 6
 Nodes Expanded: 7
 Search Depth: 6
-Time Taken: 0.000260 seconds
+Time Taken: 0.000188 seconds
 ==================================================

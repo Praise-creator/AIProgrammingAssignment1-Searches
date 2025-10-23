@@ -334,10 +334,12 @@ def write_output(metrics, problem, heuristic_name=None):
     search_name = metrics['search_name']
     
     # Build filename according to assignment requirements
+    safe_search_name = search_name.replace('*', 'star')
+    
     if heuristic_name and search_name in ['GBS', 'A*']:
-        filename = f"output_{search_name}_{heuristic_name}.txt"
+        filename = f"output_{safe_search_name}_{heuristic_name}.txt"
     else:
-        filename = f"output_{search_name}.txt"
+        filename = f"output_{safe_search_name}.txt"
     
     with open(filename, 'w') as f:
         # Write header
