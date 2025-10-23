@@ -335,6 +335,42 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
             
     return [], nodes_expanded, max_depth
 
+def bestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
+    """Search the node that has the lowest heuristic value first."""
+    "*** YOUR CODE HERE ***"
+    from util import PriorityQueue
+    frontier = PriorityQueue()
+    start_state = problem.getStartState()
+    start_heuristic = heuristic(start_state, problem)
+    frontier.push((start_state, [], 0), start_heuristic)  
+    explored = set()
+
+    nodes_expanded = 0
+    max_depth = 0
+
+    while not frontier.isEmpty():
+        currentState, actions, depth = frontier.pop()
+
+        if currentState in explored:
+            continue
+
+        explored.add(currentState)
+        nodes_expanded += 1
+        max_depth = max(max_depth, depth)
+
+        if problem.isGoalState(currentState):
+            return actions, nodes_expanded, max_depth
+
+        successors = problem.getSuccessors(currentState)
+
+        for nextState, action, stepCost in successors:
+            if nextState not in explored:
+                newActions = actions + [action]
+                next_heuristic = heuristic(nextState, problem)
+                priority = next_heuristic
+                frontier.push((nextState, newActions, depth + 1), priority)
+            
+    return [], nodes_expanded, max_depth
 
 
 # Abbreviations
